@@ -1,0 +1,518 @@
+{% extends "base.html" %}
+
+{% block title %}Sınav{% endblock %}
+
+{% block extra_css %}
+<style>
+    .question-card {
+        min-height: 400px;
+    }
+    
+    .timer {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #e74c3c;
+    }
+    
+    .option-btn {
+        width: 100%;
+        text-align: left;
+        padding: 15px;
+        margin-bottom: 10px;
+        border: 2px solid #ddd;
+        background: white;
+        transition: all 0.3s;
+    }
+    
+    .option-btn:hover {
+        border-color: #3498db;
+        background: #f8f9fa;
+    }
+    
+    .option-btn.selected {
+        border-color: #3498db;
+        background: #e3f2fd;
+    }
+    
+    .code-editor {
+        width: 100%;
+        min-height: 300px;
+        font-family: 'Courier New', monospace;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background: #1e1e1e;
+        color: #d4d4d4;
+    }
+    
+    .visual-question {
+        min-height: 300px;
+    }
+    
+    .drag-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        min-height: 200px;
+    }
+    
+    .drag-block {
+        padding: 15px 25px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        cursor: move;
+        user-select: none;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        transition: all 0.3s;
+    }
+    
+    .drag-block:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    .drag-block.dragging {
+        opacity: 0.5;
+    }
+    
+    .sequence-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .sequence-item {
+        padding: 15px;
+        background: white;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .sequence-item:hover {
+        border-color: #3498db;
+    }
+    
+    .sequence-item.selected {
+        background: #e3f2fd;
+        border-color: #3498db;
+    }
+    
+    .visual-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 10px;
+        padding: 20px;
+    }
+    
+    .visual-cell {
+        aspect-ratio: 1;
+        border: 2px solid #ddd;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .visual-cell:hover {
+        transform: scale(1.1);
+        border-color: #3498db;
+    }
+    
+    .visual-cell.selected {
+        background: #3498db;
+        color: white;
+    }
+    
+    .warning-modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        z-index: 9999;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <span id="question-number">Soru 1/{{ questions|length }}</span>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <i class="bi bi-clock-fill"></i>
+                        <span id="timer" class="timer">25:00</span>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <span id="tab-switches">Sekme Değişimi: 0/3</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body question-card p-4">
+                <div id="question-container">
+                    <!-- Questions will be loaded dynamically -->
+                </div>
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <button id="prev-btn" class="btn btn-outline-secondary" disabled>
+                        <i class="bi bi-arrow-left"></i> Önceki
+                    </button>
+                    <button id="next-btn" class="btn btn-primary">
+                        Sonraki <i class="bi bi-arrow-right"></i>
+                    </button>
+                    <button id="submit-btn" class="btn btn-success" style="display: none;">
+                        <i class="bi bi-check-circle"></i> Sınavı Bitir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="warning-modal" class="warning-modal">
+    <h3 class="text-danger mb-3">⚠️ Uyarı!</h3>
+    <p>Sekme değiştirme tespit edildi. Lütfen sınav sayfasında kalın!</p>
+    <p class="text-muted">Kalan hak: <span id="remaining-chances"></span>/3</p>
+    <button class="btn btn-primary" onclick="closeWarning()">Anladım</button>
+</div>
+
+<div id="overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 9998;"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const attemptId = {{ exam_attempt.id }};
+const questions = {{ questions|tojson }};
+let currentQuestion = 0;
+let answers = {};
+let tabSwitches = 0;
+let timeLeft = 25 * 60 - {{ elapsed_seconds }};
+
+// Load question
+function loadQuestion(index) {
+    const question = questions[index];
+    const container = document.getElementById('question-container');
+    
+    document.getElementById('question-number').textContent = `Soru ${index + 1}/${questions.length}`;
+    
+    let html = `<h4 class="mb-4">${question.question_text}</h4>`;
+    
+    if (question.question_type === 'multiple_choice') {
+        html += '<div class="options">';
+        for (let [key, value] of Object.entries(question.options)) {
+            const selected = answers[question.id] === key ? 'selected' : '';
+            html += `
+                <button class="option-btn ${selected}" onclick="selectOption('${key}', ${question.id})">
+                    <strong>${key.toUpperCase()})</strong> ${value}
+                </button>
+            `;
+        }
+        html += '</div>';
+    } else if (question.question_type === 'coding') {
+        const code = answers[question.id] || '# Kodunuzu buraya yazın\n\n';
+        html += `
+            <textarea class="code-editor" id="code-editor" onchange="saveCode(${question.id})">${code}</textarea>
+        `;
+    } else if (question.question_type === 'drag_drop') {
+        // Drag and drop visual question
+        html += `
+            <div class="visual-question">
+                <p class="mb-3">Blokları sürükleyerek doğru sıraya yerleştir:</p>
+                <div id="drag-container-${question.id}" class="drag-container">
+                    ${renderDragDropBlocks(question)}
+                </div>
+            </div>
+        `;
+        setTimeout(() => initDragDrop(question.id), 100);
+    } else if (question.question_type === 'sequence') {
+        // Sequence ordering question
+        html += `
+            <div class="visual-question">
+                <p class="mb-3">Adımları doğru sıraya koy:</p>
+                <div id="sequence-${question.id}" class="sequence-container">
+                    ${renderSequence(question)}
+                </div>
+            </div>
+        `;
+        setTimeout(() => initSequence(question.id), 100);
+    } else if (question.question_type === 'visual') {
+        // Visual pattern or game-like question
+        html += `
+            <div class="visual-question" id="visual-${question.id}">
+                ${renderVisualQuestion(question)}
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+    
+    // Update buttons
+    document.getElementById('prev-btn').disabled = (index === 0);
+    document.getElementById('next-btn').style.display = (index === questions.length - 1) ? 'none' : 'block';
+    document.getElementById('submit-btn').style.display = (index === questions.length - 1) ? 'block' : 'none';
+}
+
+function selectOption(option, questionId) {
+    answers[questionId] = option;
+    saveAnswer(questionId, option);
+    
+    // Update UI
+    document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
+    event.target.closest('.option-btn').classList.add('selected');
+}
+
+function saveCode(questionId) {
+    const code = document.getElementById('code-editor').value;
+    answers[questionId] = code;
+    saveAnswer(questionId, code);
+}
+
+function saveAnswer(questionId, answer) {
+    fetch('/exam/save-answer', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            attempt_id: attemptId,
+            question_id: questionId,
+            answer: answer
+        })
+    });
+}
+
+document.getElementById('prev-btn').addEventListener('click', () => {
+    if (currentQuestion > 0) {
+        currentQuestion--;
+        loadQuestion(currentQuestion);
+    }
+});
+
+document.getElementById('next-btn').addEventListener('click', () => {
+    if (currentQuestion < questions.length - 1) {
+        currentQuestion++;
+        loadQuestion(currentQuestion);
+    }
+});
+
+document.getElementById('submit-btn').addEventListener('click', () => {
+    if (confirm('Sınavı bitirmek istediğinizden emin misiniz?')) {
+        window.location.href = `/exam/submit/${attemptId}`;
+    }
+});
+
+// Timer
+function updateTimer() {
+    timeLeft--;
+    
+    if (timeLeft <= 0) {
+        alert('Süre doldu! Sınav otomatik olarak sonlandırılıyor.');
+        window.location.href = `/exam/submit/${attemptId}`;
+        return;
+    }
+    
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    document.getElementById('timer').textContent = 
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    
+    if (timeLeft < 300) {
+        document.getElementById('timer').style.color = '#e74c3c';
+    }
+}
+
+setInterval(updateTimer, 1000);
+
+// Anti-cheat
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        tabSwitches++;
+        
+        fetch('/exam/report-tab-switch', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({attempt_id: attemptId})
+        }).then(r => r.json()).then(data => {
+            document.getElementById('tab-switches').textContent = `Sekme Değişimi: ${tabSwitches}/3`;
+            
+            if (data.warning === 'excessive') {
+                alert('⚠️ Çok fazla sekme değiştirdiniz! Bu durum sınav sonucunuza yansıyacaktır.');
+            } else {
+                showWarning();
+            }
+        });
+    }
+});
+
+function showWarning() {
+    document.getElementById('remaining-chances').textContent = 3 - tabSwitches;
+    document.getElementById('warning-modal').style.display = 'block';
+    document.getElementById('overlay').style.display = 'block';
+}
+
+function closeWarning() {
+    document.getElementById('warning-modal').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+}
+
+// Prevent right click and shortcuts
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'u' || e.key === 's')) {
+        // Allow copy/paste in code editor
+        if (e.target.id === 'code-editor') return;
+        e.preventDefault();
+    }
+});
+
+// Initial load
+loadQuestion(0);
+
+// Helper functions for visual questions
+function renderDragDropBlocks(question) {
+    const blocks = ['Başla', 'Değişken Oluştur', 'Döngü', 'Yazdır', 'Bitir'];
+    return blocks.map((block, i) => 
+        `<div class="drag-block" draggable="true" data-id="${i}">${block}</div>`
+    ).join('');
+}
+
+function initDragDrop(questionId) {
+    const container = document.getElementById(`drag-container-${questionId}`);
+    if (!container) return;
+    
+    const blocks = container.querySelectorAll('.drag-block');
+    let draggedElement = null;
+    
+    blocks.forEach(block => {
+        block.addEventListener('dragstart', function() {
+            draggedElement = this;
+            this.classList.add('dragging');
+        });
+        
+        block.addEventListener('dragend', function() {
+            this.classList.remove('dragging');
+            saveVisualAnswer(questionId);
+        });
+        
+        block.addEventListener('dragover', function(e) {
+            e.preventDefault();
+        });
+        
+        block.addEventListener('drop', function(e) {
+            e.preventDefault();
+            if (draggedElement !== this) {
+                const parent = this.parentNode;
+                const allBlocks = [...parent.children];
+                const draggedIndex = allBlocks.indexOf(draggedElement);
+                const droppedIndex = allBlocks.indexOf(this);
+                
+                if (draggedIndex < droppedIndex) {
+                    parent.insertBefore(draggedElement, this.nextSibling);
+                } else {
+                    parent.insertBefore(draggedElement, this);
+                }
+            }
+        });
+    });
+}
+
+function renderSequence(question) {
+    const steps = [
+        '1. Kullanıcıdan veri al',
+        '2. Veriyi işle',
+        '3. Sonucu hesapla',
+        '4. Ekrana yazdır'
+    ];
+    return steps.map((step, i) => 
+        `<div class="sequence-item" data-order="${i}" onclick="selectSequenceItem(this, ${question.id})">${step}</div>`
+    ).join('');
+}
+
+let sequenceOrder = {};
+
+function selectSequenceItem(element, questionId) {
+    if (!sequenceOrder[questionId]) sequenceOrder[questionId] = [];
+    
+    const order = element.dataset.order;
+    const index = sequenceOrder[questionId].indexOf(order);
+    
+    if (index > -1) {
+        sequenceOrder[questionId].splice(index, 1);
+        element.classList.remove('selected');
+        element.style.order = '';
+    } else {
+        sequenceOrder[questionId].push(order);
+        element.classList.add('selected');
+        element.style.order = sequenceOrder[questionId].length;
+    }
+    
+    saveVisualAnswer(questionId);
+}
+
+function renderVisualQuestion(question) {
+    return `
+        <p class="mb-3">Hedefe ulaşmak için doğru yolu seç:</p>
+        <div class="visual-grid" style="grid-template-columns: repeat(4, 1fr);">
+            ${Array(16).fill(0).map((_, i) => {
+                const emoji = i === 0 ? '🧍' : i === 15 ? '🎯' : i === 5 || i === 9 || i === 13 ? '⭐' : '';
+                return `<div class="visual-cell" data-pos="${i}" onclick="selectVisualCell(this, ${question.id})">${emoji}</div>`;
+            }).join('')}
+        </div>
+        <p class="text-muted mt-2"><small>Başlangıçtan (🧍) hedefe (🎯) ulaşmak için yıldızları (⭐) topla</small></p>
+    `;
+}
+
+let visualPath = {};
+
+function selectVisualCell(element, questionId) {
+    if (!visualPath[questionId]) visualPath[questionId] = [];
+    
+    const pos = element.dataset.pos;
+    
+    if (element.classList.contains('selected')) {
+        const index = visualPath[questionId].indexOf(pos);
+        visualPath[questionId].splice(index, 1);
+        element.classList.remove('selected');
+    } else {
+        visualPath[questionId].push(pos);
+        element.classList.add('selected');
+    }
+    
+    saveVisualAnswer(questionId);
+}
+
+function saveVisualAnswer(questionId) {
+    const container = document.getElementById(`drag-container-${questionId}`);
+    let answer = '';
+    
+    if (container) {
+        const blocks = [...container.querySelectorAll('.drag-block')];
+        answer = blocks.map(b => b.textContent).join(',');
+    } else if (sequenceOrder[questionId]) {
+        answer = sequenceOrder[questionId].join(',');
+    } else if (visualPath[questionId]) {
+        answer = visualPath[questionId].join(',');
+    }
+    
+    answers[questionId] = answer;
+    saveAnswer(questionId, answer);
+}
+
+</script>
+{% endblock %}

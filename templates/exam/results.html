@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Sınav Sonuçları{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body text-center p-5">
+                <h1 class="display-4 mb-4">
+                    {% if exam_attempt.score >= 90 %}
+                        🎉 Mükemmel!
+                    {% elif exam_attempt.score >= 70 %}
+                        👏 Harika!
+                    {% elif exam_attempt.score >= 40 %}
+                        👍 İyi!
+                    {% else %}
+                        💪 Daha İyisini Yapabilirsin!
+                    {% endif %}
+                </h1>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h2 class="display-3 text-primary mb-2">{{ "%.1f"|format(exam_attempt.score) }}%</h2>
+                                <p class="text-muted mb-0">Skorun</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h2 class="display-3 mb-2">
+                                    {% if exam_attempt.get_level() == 'advanced' %}
+                                        🔴
+                                    {% elif exam_attempt.get_level() == 'intermediate' %}
+                                        🟡
+                                    {% elif exam_attempt.get_level() == 'beginner' %}
+                                        🟢
+                                    {% endif %}
+                                </h2>
+                                <p class="mb-0">
+                                    <strong>
+                                        {% if exam_attempt.get_level() == 'advanced' %}
+                                            İleri Seviye
+                                        {% elif exam_attempt.get_level() == 'intermediate' %}
+                                            Orta Seviye
+                                        {% elif exam_attempt.get_level() == 'beginner' %}
+                                            Başlangıç Seviyesi
+                                        {% endif %}
+                                    </strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <i class="bi bi-clock-fill text-primary" style="font-size: 2rem;"></i>
+                                <p class="mb-0 mt-2"><strong>Süre</strong></p>
+                                <p class="text-muted">{{ ((exam_attempt.end_time - exam_attempt.start_time).seconds // 60) }} dakika</p>
+                            </div>
+                            <div class="col-4">
+                                <i class="bi bi-list-check text-success" style="font-size: 2rem;"></i>
+                                <p class="mb-0 mt-2"><strong>Doğru</strong></p>
+                                <p class="text-muted">{{ exam_attempt.answers|selectattr('is_correct')|list|length }} / {{ exam_attempt.answers|length }}</p>
+                            </div>
+                            <div class="col-4">
+                                <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 2rem;"></i>
+                                <p class="mb-0 mt-2"><strong>Uyarı</strong></p>
+                                <p class="text-muted">{{ exam_attempt.tab_switches }} sekme değişimi</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-center">
+                    <a href="{{ url_for('exam.certificate', attempt_id=exam_attempt.id) }}" class="btn btn-success btn-lg">
+                        <i class="bi bi-file-pdf-fill"></i> Sertifika İndir
+                    </a>
+                    <a href="{{ url_for('main.leaderboard') }}" class="btn btn-warning btn-lg">
+                        <i class="bi bi-trophy-fill"></i> Liderlik Tablosu
+                    </a>
+                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-house-fill"></i> Anasayfa
+                    </a>
+                </div>
+                
+                {% if exam_attempt.score < 70 %}
+                <div class="alert alert-info mt-4">
+                    <i class="bi bi-info-circle-fill"></i>
+                    Daha yüksek seviye için tekrar dene! Her deneme öğrenme fırsatıdır.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body">
+                <h4 class="mb-3">📊 Detaylı Sonuçlar</h4>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Soru</th>
+                                <th>Tür</th>
+                                <th>Zorluk</th>
+                                <th>Cevabın</th>
+                                <th>Sonuç</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for answer in exam_attempt.answers %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>
+                                    {% if answer.question.question_type == 'multiple_choice' %}
+                                        Çoktan Seçmeli
+                                    {% else %}
+                                        Kodlama
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'danger' if answer.question.difficulty == 'advanced' else 'warning' if answer.question.difficulty == 'intermediate' else 'success' }}">
+                                        {{ answer.question.difficulty }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if answer.question.question_type == 'multiple_choice' %}
+                                        {{ answer.user_answer|upper if answer.user_answer else '-' }}
+                                    {% else %}
+                                        Kod
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if answer.is_correct %}
+                                        <span class="badge bg-success">✓ Doğru</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">✗ Yanlış</span>
+                                        {% if answer.question.question_type == 'multiple_choice' %}
+                                            <small class="text-muted">(Doğru: {{ answer.question.correct_answer|upper }})</small>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

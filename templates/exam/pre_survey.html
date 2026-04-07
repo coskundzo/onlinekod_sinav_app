@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Sınav Öncesi Anket{% endblock %}
+
+{% block extra_css %}
+<style>
+    .survey-card {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    .level-option {
+        border: 3px solid #ddd;
+        border-radius: 20px;
+        padding: 2rem;
+        margin: 1.2rem 0;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: white;
+    }
+    
+    .level-option:hover {
+        border-color: #3498db;
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+    }
+    
+    .level-option input[type="radio"] {
+        display: none;
+    }
+    
+    .level-option input[type="radio"]:checked + .level-content {
+        border-left: 6px solid #3498db;
+        padding-left: 1.5rem;
+    }
+    
+    .level-icon {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .level-content h5 {
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+    }
+    
+    .level-content p {
+        font-size: 1.1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .level-option {
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        
+        .level-icon {
+            font-size: 2.5rem;
+        }
+        
+        .level-content h5 {
+            font-size: 1.2rem;
+        }
+        
+        .level-content p {
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-11 col-xl-10">
+        <div class="card survey-card">
+            <div class="card-body p-3 p-md-5">
+                <h2 class="text-center mb-4">
+                    <i class="bi bi-clipboard-check"></i> Sınav Öncesi Anket
+                </h2>
+                
+                <p class="lead text-center mb-4 mb-md-5">
+                    Sana en uygun soruları seçebilmemiz için lütfen kodlama bilgin hakkında bize bilgi ver.
+                </p>
+                
+                <form method="POST">
+                    <h4 class="mb-4">Kodlama/Programlama bilgin ne seviyede?</h4>
+                    
+                    <label class="level-option">
+                        <input type="radio" name="coding_level" value="none" required>
+                        <div class="level-content">
+                            <div class="level-icon">🌱</div>
+                            <h5><strong>Hiç Bilgim Yok</strong></h5>
+                            <p class="text-muted mb-0">
+                                Daha önce hiç kod yazmadım. Mantık, desen tanıma ve görsel sorularla değerlendirilmek istiyorum.
+                                <br><small>✅ Matematik, mantık, desen tanıma</small>
+                                <br><small>✅ Sürükle-bırak, sıralama, hedef bulma</small>
+                                <br><small>❌ Hiç kod yazma sorusu YOK</small>
+                            </p>
+                        </div>
+                    </label>
+                    
+                    <label class="level-option">
+                        <input type="radio" name="coding_level" value="beginner">
+                        <div class="level-content">
+                            <div class="level-icon">🌿</div>
+                            <h5><strong>Başlangıç Seviyesi</strong></h5>
+                            <p class="text-muted mb-0">
+                                Temel programlama kavramlarını biliyorum (değişken, döngü, if-else vb.)
+                                <br><small>→ %70 mantık/görsel + %30 basit kod soruları</small>
+                            </p>
+                        </div>
+                    </label>
+                    
+                    <label class="level-option">
+                        <input type="radio" name="coding_level" value="intermediate">
+                        <div class="level-content">
+                            <div class="level-icon">🌳</div>
+                            <h5><strong>Orta Seviye</strong></h5>
+                            <p class="text-muted mb-0">
+                                Fonksiyonlar, listeler, sözlükler gibi yapıları kullanabiliyorum.
+                                <br><small>→ %60 kod yazma + %40 mantık soruları</small>
+                            </p>
+                        </div>
+                    </label>
+                    
+                    <label class="level-option">
+                        <input type="radio" name="coding_level" value="advanced">
+                        <div class="level-content">
+                            <div class="level-icon">🏆</div>
+                            <h5><strong>İleri Seviye</strong></h5>
+                            <p class="text-muted mb-0">
+                                OOP, algoritmalar ve veri yapıları konusunda deneyimliyim.
+                                <br><small>→ %80 zorlayıcı kod soruları + %20 mantık</small>
+                            </p>
+                        </div>
+                    </label>
+                    
+                    <div class="alert alert-info mt-4">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <strong>Bilgi:</strong> Seçimini daha sonra profilinden değiştirebilirsin. Dürüst ol, böylece seni doğru şekilde değerlendirebiliriz!
+                    </div>
+                    
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-arrow-right-circle-fill"></i> Devam Et ve Sınava Başla
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add visual feedback when selecting
+document.querySelectorAll('.level-option').forEach(option => {
+    option.addEventListener('click', function() {
+        document.querySelectorAll('.level-option').forEach(opt => {
+            opt.style.borderColor = '#ddd';
+            opt.style.background = 'white';
+        });
+        this.style.borderColor = '#3498db';
+        this.style.background = '#f0f8ff';
+    });
+});
+</script>
+{% endblock %}

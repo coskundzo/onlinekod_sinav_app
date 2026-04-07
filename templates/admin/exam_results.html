@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Sınav Sonuçları - Admin{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-white">
+            <i class="bi bi-clipboard-data"></i> Sınav Sonuçları
+        </h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.admin_panel') }}" class="text-white">Admin Panel</a></li>
+                <li class="breadcrumb-item active text-white">Sınav Sonuçları</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<!-- İstatistikler -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+        <div class="card text-center">
+            <div class="card-body p-3">
+                <h6 class="text-muted mb-2">Toplam</h6>
+                <h3 class="mb-0">{{ stats.total }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+        <div class="card text-center bg-light">
+            <div class="card-body p-3">
+                <h6 class="text-muted mb-2">🌱 Bilgim Yok</h6>
+                <h3 class="mb-0">{{ stats.none }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+        <div class="card text-center bg-success-subtle">
+            <div class="card-body p-3">
+                <h6 class="text-muted mb-2">🟢 Başlangıç</h6>
+                <h3 class="mb-0">{{ stats.beginner }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+        <div class="card text-center bg-warning-subtle">
+            <div class="card-body p-3">
+                <h6 class="text-muted mb-2">🟡 Orta</h6>
+                <h3 class="mb-0">{{ stats.intermediate }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+        <div class="card text-center bg-danger-subtle">
+            <div class="card-body p-3">
+                <h6 class="text-muted mb-2">🔴 İleri</h6>
+                <h3 class="mb-0">{{ stats.advanced }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+        <div class="card text-center bg-info-subtle">
+            <div class="card-body p-3">
+                <h6 class="text-muted mb-2">Ort. Puan</h6>
+                <h3 class="mb-0">{{ "%.1f"|format(stats.avg_score) }}%</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtreler -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="bi bi-funnel"></i> Filtreler</h5>
+                <form method="GET" action="{{ url_for('admin.exam_results') }}" class="row g-3">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Seviye</label>
+                        <select name="level" class="form-select">
+                            <option value="all" {{ 'selected' if level_filter == 'all' else '' }}>Tümü</option>
+                            <option value="none" {{ 'selected' if level_filter == 'none' else '' }}>🌱 Bilgim Yok</option>
+                            <option value="beginner" {{ 'selected' if level_filter == 'beginner' else '' }}>🟢 Başlangıç</option>
+                            <option value="intermediate" {{ 'selected' if level_filter == 'intermediate' else '' }}>🟡 Orta</option>
+                            <option value="advanced" {{ 'selected' if level_filter == 'advanced' else '' }}>🔴 İleri</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Kullanıcı Adı</label>
+                        <input type="text" name="user" class="form-control" placeholder="Kullanıcı ara..." value="{{ user_filter }}">
+                    </div>
+                    <div class="col-12 col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="bi bi-search"></i> Filtrele
+                        </button>
+                        <a href="{{ url_for('admin.exam_results') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Temizle
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sonuçlar Tablosu -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-3">
+                    <i class="bi bi-table"></i> Sınav Sonuçları
+                    <span class="badge bg-secondary">{{ exam_attempts|length }} sonuç</span>
+                </h5>
+                
+                {% if exam_attempts %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="text-center" style="width: 50px;">#</th>
+                                <th>Kullanıcı</th>
+                                <th class="text-center">Sınav Seviyesi</th>
+                                <th class="text-center">Puan</th>
+                                <th class="text-center">Sonuç Seviyesi</th>
+                                <th class="d-none d-md-table-cell">Tarih</th>
+                                <th class="text-center d-none d-lg-table-cell">Süre</th>
+                                <th class="text-center">Uyarı</th>
+                                <th class="text-center">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exam in exam_attempts %}
+                            <tr>
+                                <td class="text-center">{{ loop.index }}</td>
+                                <td>
+                                    <strong>{{ exam.user.username }}</strong>
+                                    <br><small class="text-muted">{{ exam.user.email }}</small>
+                                </td>
+                                <td class="text-center">
+                                    {% if exam.exam_level == 'none' %}
+                                        <span class="badge bg-secondary">🌱 Bilgim Yok</span>
+                                    {% elif exam.exam_level == 'beginner' %}
+                                        <span class="badge bg-success">🟢 Başlangıç</span>
+                                    {% elif exam.exam_level == 'intermediate' %}
+                                        <span class="badge bg-warning">🟡 Orta</span>
+                                    {% elif exam.exam_level == 'advanced' %}
+                                        <span class="badge bg-danger">🔴 İleri</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Bilinmiyor</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <strong style="font-size: 1.2rem;">{{ "%.1f"|format(exam.score) }}%</strong>
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar bg-{{ 'success' if exam.score >= 70 else 'warning' if exam.score >= 50 else 'danger' }}" 
+                                             style="width: {{ exam.score }}%;"></div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    {% if exam.score >= 90 %}
+                                        <span class="badge bg-danger">🔴 İleri</span>
+                                    {% elif exam.score >= 70 %}
+                                        <span class="badge bg-warning">🟡 Orta</span>
+                                    {% elif exam.score >= 40 %}
+                                        <span class="badge bg-success">🟢 Başlangıç</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">🌱 Geliştirilmeli</span>
+                                    {% endif %}
+                                </td>
+                                <td class="d-none d-md-table-cell">
+                                    {{ exam.end_time.strftime('%d.%m.%Y') }}<br>
+                                    <small class="text-muted">{{ exam.end_time.strftime('%H:%M') }}</small>
+                                </td>
+                                <td class="text-center d-none d-lg-table-cell">
+                                    {{ ((exam.end_time - exam.start_time).seconds // 60) }} dk
+                                </td>
+                                <td class="text-center">
+                                    {% if exam.tab_switches > 0 %}
+                                        <span class="badge bg-warning">{{ exam.tab_switches }} ⚠️</span>
+                                    {% else %}
+                                        <span class="badge bg-success">✓ Temiz</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ url_for('admin.exam_detail', attempt_id=exam.id) }}" class="btn btn-sm btn-info">
+                                        <i class="bi bi-eye"></i> Detay
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle"></i> Henüz sınav sonucu bulunmuyor.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

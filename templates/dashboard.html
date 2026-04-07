@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Panel{% endblock %}
+
+{% block extra_css %}
+<style>
+    .exam-start-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: 3px solid #ffd700;
+        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+    }
+    
+    .exam-start-card h3 {
+        color: white;
+        font-size: clamp(1.8rem, 4vw, 2.5rem);
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .exam-start-card .lead {
+        color: white;
+    }
+    
+    .exam-start-card .text-muted {
+        color: rgba(255,255,255,0.8) !important;
+    }
+    
+    .start-exam-btn {
+        font-size: clamp(1.3rem, 3vw, 1.8rem) !important;
+        padding: 1.2rem 3rem !important;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+        border: 4px solid #fff !important;
+        border-radius: 50px !important;
+        box-shadow: 0 8px 25px rgba(245, 87, 108, 0.5) !important;
+        font-weight: bold !important;
+        letter-spacing: 1px;
+        transition: all 0.3s ease !important;
+        animation: pulse 2s infinite;
+    }
+    
+    .start-exam-btn:hover {
+        transform: scale(1.1) translateY(-5px) !important;
+        box-shadow: 0 15px 40px rgba(245, 87, 108, 0.7) !important;
+        background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%) !important;
+    }
+    
+    .start-exam-btn i {
+        font-size: 1.5em;
+        margin-right: 0.5rem;
+        animation: bounce 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% {
+            box-shadow: 0 8px 25px rgba(245, 87, 108, 0.5);
+        }
+        50% {
+            box-shadow: 0 8px 35px rgba(245, 87, 108, 0.8), 0 0 20px rgba(255, 215, 0, 0.6);
+        }
+    }
+    
+    @keyframes bounce {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-5px);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="text-white mb-4">
+            <i class="bi bi-speedometer2"></i> Hoş Geldin, {{ current_user.username }}!
+        </h2>
+    </div>
+</div>
+
+<div class="row g-3 g-md-4 mb-4">
+    <div class="col-12 col-sm-6 col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-trophy-fill text-warning" style="font-size: clamp(2.5rem, 5vw, 3.5rem);"></i>
+                <h3 class="mt-3" style="font-size: clamp(1.8rem, 4vw, 2.2rem);">{{ best_score }}%</h3>
+                <p class="text-muted">En İyi Skorun</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-12 col-sm-6 col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-bar-chart-fill text-primary" style="font-size: clamp(2.5rem, 5vw, 3.5rem);"></i>
+                <h3 class="mt-3" style="font-size: clamp(1.8rem, 4vw, 2.2rem);">
+                    {% if level == 'advanced' %}
+                        🔴 İleri
+                    {% elif level == 'intermediate' %}
+                        🟡 Orta
+                    {% elif level == 'beginner' %}
+                        🟢 Başlangıç
+                    {% else %}
+                        Henüz Yok
+                    {% endif %}
+                </h3>
+                <p class="text-muted">Seviye</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-12 col-sm-6 col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-list-check text-success" style="font-size: clamp(2.5rem, 5vw, 3.5rem);"></i>
+                <h3 class="mt-3" style="font-size: clamp(1.8rem, 4vw, 2.2rem);">{{ exam_history|length }}</h3>
+                <p class="text-muted">Tamamlanan Sınav</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card exam-start-card">
+            <div class="card-body text-center p-4 p-md-5">
+                <h3 class="mb-4">🎯 Sınava Başla</h3>
+                <p class="lead mb-4">
+                    <strong>25 dakikalık sınav ile yeteneklerini test et!</strong><br>
+                    {% if current_user.coding_knowledge == 'none' %}
+                    <strong>Senin için:</strong> Sadece mantık, desen tanıma ve görsel sorular! 🧩📊🎯
+                    <br><small class="text-muted">Hiç kod yazma sorusu yok, rahat ol!</small>
+                    {% elif current_user.coding_knowledge == 'beginner' %}
+                    <strong>Senin için:</strong> Ağırlıklı mantık soruları + Biraz basit kod 🌿💻
+                    {% elif current_user.coding_knowledge == 'intermediate' %}
+                    <strong>Senin için:</strong> Dengeli kod ve mantık soruları 🌳⚖️
+                    {% elif current_user.coding_knowledge == 'advanced' %}
+                    <strong>Senin için:</strong> Zorlayıcı algoritma ve kod soruları 🏆🔥
+                    {% else %}
+                    Çoktan seçmeli sorular ve kod yazma görevleri seni bekliyor. 💻
+                    {% endif %}
+                </p>
+                <form method="POST" action="{{ url_for('exam.start_exam') }}">
+                    <button type="submit" class="btn start-exam-btn">
+                        <i class="bi bi-play-circle-fill"></i> SINAVA BAŞLA
+                    </button>
+                </form>
+                <p class="text-muted mt-4 mb-0">
+                    <i class="bi bi-info-circle"></i> Sınav başladığında sekme değiştirmemeye özen göster!
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if exam_history %}
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="mb-3">
+                    <i class="bi bi-clock-history"></i> Sınav Geçmişin
+                </h4>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Puan</th>
+                                <th>Seviye</th>
+                                <th>Süre</th>
+                                <th>İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for attempt in exam_history %}
+                            <tr>
+                                <td>{{ attempt.end_time.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td><strong>{{ "%.1f"|format(attempt.score) }}%</strong></td>
+                                <td>
+                                    <span class="badge bg-{{ 'danger' if attempt.get_level() == 'advanced' else 'warning' if attempt.get_level() == 'intermediate' else 'success' }}">
+                                        {{ attempt.get_level_emoji() }} 
+                                        {% if attempt.get_level() == 'advanced' %}İleri
+                                        {% elif attempt.get_level() == 'intermediate' %}Orta
+                                        {% elif attempt.get_level() == 'beginner' %}Başlangıç
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ ((attempt.end_time - attempt.start_time).seconds // 60) }} dk</td>
+                                <td>
+                                    <a href="{{ url_for('exam.results', attempt_id=attempt.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Detay
+                                    </a>
+                                    <a href="{{ url_for('exam.certificate', attempt_id=attempt.id) }}" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-file-pdf"></i> Sertifika
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

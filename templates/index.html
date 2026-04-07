@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Ana Sayfa{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-3 mt-md-5">
+    <div class="col-12 col-lg-10 col-xl-8 text-center text-white px-3">
+        <div class="mb-3 mb-md-4">
+            <h2 class="text-info fw-bold" style="font-size: clamp(1.8rem, 5vw, 2.5rem);">onlinekod.com</h2>
+        </div>
+        <h1 class="display-3 fw-bold mb-3 mb-md-4" style="font-size: clamp(2rem, 6vw, 3.5rem);">🎓 Bursluluk Sınavı</h1>
+        <p class="lead mb-4 mb-md-5" style="font-size: clamp(1.1rem, 3vw, 1.4rem);">Yeteneklerini test et, seviyeni öğren ve liderlik tablosunda yerini al!</p>
+        
+        <div class="row g-3 g-md-4 mb-4 mb-md-5">
+            <div class="col-12 col-sm-6 col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <i class="bi bi-clock-fill text-primary" style="font-size: clamp(2.5rem, 5vw, 3.5rem);"></i>
+                        <h5 class="card-title mt-3">⏱ Zamanlı Sınav</h5>
+                        <p class="card-text">25 dakika içinde 20 soruda yeteneklerini kanıtla</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <i class="bi bi-award-fill text-warning" style="font-size: clamp(2.5rem, 5vw, 3.5rem);"></i>
+                        <h5 class="card-title mt-3">🏆 Sertifika</h5>
+                        <p class="card-text">Başarılı sonuçlarını PDF sertifika ile belgele</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <i class="bi bi-graph-up text-success" style="font-size: clamp(2.5rem, 5vw, 3.5rem);"></i>
+                        <h5 class="card-title mt-3">📊 Seviye Testi</h5>
+                        <p class="card-text">Başlangıç, Orta veya İleri seviye</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-grid gap-3 d-sm-flex justify-content-center mb-4 mb-md-5">
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg px-4 px-md-5">
+                <i class="bi bi-person-plus-fill"></i> Hemen Kayıt Ol
+            </a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg px-4 px-md-5">
+                <i class="bi bi-box-arrow-in-right"></i> Giriş Yap
+            </a>
+        </div>
+
+        <div class="mt-4 mt-md-5">
+            <h4 class="mb-3 mb-md-4">✨ Özellikler</h4>
+            <div class="row text-start">
+                <div class="col-12 col-md-6 mb-3 mb-md-0">
+                    <ul class="list-unstyled">
+                        <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Çoktan seçmeli sorular</li>
+                        <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Kod editor ile programlama soruları</li>
+                        <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> AI destekli soru üretimi</li>
+                    </ul>
+                </div>
+                <div class="col-12 col-md-6">
+                    <ul class="list-unstyled">
+                        <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Anti-cheat sistemi</li>
+                        <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Liderlik tablosu</li>
+                        <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Otomatik değerlendirme</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

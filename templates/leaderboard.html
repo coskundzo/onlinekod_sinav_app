@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Liderlik Tablosu{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body p-3 p-md-4">
+                <h2 class="text-center mb-4">
+                    <i class="bi bi-trophy-fill text-warning"></i> Liderlik Tablosu
+                </h2>
+                <p class="text-center text-muted mb-4">
+                    En başarılı katılımcılar ve skorları
+                </p>
+                
+                {% if leaderboard %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 60px;" class="text-center">Sıra</th>
+                                <th>Kullanıcı</th>
+                                <th class="d-none d-md-table-cell">En İyi Skor</th>
+                                <th class="d-md-none">Skor</th>
+                                <th class="text-center">Seviye</th>
+                                <th class="d-none d-sm-table-cell text-center">Rozet</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in leaderboard %}
+                            <tr class="{{ 'table-warning' if item.user.id == current_user.id else '' }}">
+                                <td class="text-center align-middle">
+                                    {% if loop.index == 1 %}
+                                        <span style="font-size: 1.5rem;">🥇</span>
+                                    {% elif loop.index == 2 %}
+                                        <span style="font-size: 1.5rem;">🥈</span>
+                                    {% elif loop.index == 3 %}
+                                        <span style="font-size: 1.5rem;">🥉</span>
+                                    {% else %}
+                                        <strong>{{ loop.index }}</strong>
+                                    {% endif %}
+                                </td>
+                                <td class="align-middle">
+                                    <strong>{{ item.user.username }}</strong>
+                                    {% if item.user.id == current_user.id %}
+                                        <span class="badge bg-info">Sen</span>
+                                    {% endif %}
+                                </td>
+                                <td class="align-middle">
+                                    <div class="progress" style="height: 28px; min-width: 100px;">
+                                        <div class="progress-bar bg-{{ 'danger' if item.score >= 90 else 'warning' if item.score >= 70 else 'success' }}" 
+                                             role="progressbar" 
+                                             style="width: {{ item.score }}%;">
+                                            <strong>{{ "%.1f"|format(item.score) }}%</strong>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <span class="badge bg-{{ 'danger' if item.level == 'advanced' else 'warning' if item.level == 'intermediate' else 'success' }}" style="font-size: 0.95rem; padding: 0.5rem 0.8rem;">
+                                        {% if item.level == 'advanced' %}
+                                            🔴 İleri
+                                        {% elif item.level == 'intermediate' %}
+                                            🟡 Orta
+                                        {% elif item.level == 'beginner' %}
+                                            🟢 Başlangıç
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if loop.index == 1 %}
+                                        <span class="badge bg-warning text-dark">👑 Şampiyon</span>
+                                    {% elif item.score == 100 %}
+                                        <span class="badge bg-success">⭐ Mükemmel</span>
+                                    {% elif item.score >= 90 %}
+                                        <span class="badge bg-info">🌟 Harika</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center p-5">
+                    <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+                    <p class="text-muted mt-3">Henüz liderlik tablosunda kimse yok.</p>
+                    <p>İlk sen ol!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">
+                <i class="bi bi-house-fill"></i> Anasayfaya Dön
+            </a>
+            {% if current_user.is_authenticated %}
+            <form method="POST" action="{{ url_for('exam.start_exam') }}" class="d-inline">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-play-circle-fill"></i> Sınava Başla
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

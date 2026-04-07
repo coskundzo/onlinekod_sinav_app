@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Sınav Detayı - Admin{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-white">
+            <i class="bi bi-file-earmark-text"></i> Sınav Detayı
+        </h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.admin_panel') }}" class="text-white">Admin Panel</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.exam_results') }}" class="text-white">Sınav Sonuçları</a></li>
+                <li class="breadcrumb-item active text-white">Detay #{{ exam_attempt.id }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<!-- Kullanıcı ve Sınav Bilgileri -->
+<div class="row g-4 mb-4">
+    <div class="col-12 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="bi bi-person-circle"></i> Kullanıcı Bilgileri</h5>
+                <table class="table table-borderless">
+                    <tr>
+                        <td class="text-muted" width="40%">Kullanıcı Adı:</td>
+                        <td><strong>{{ exam_attempt.user.username }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">E-posta:</td>
+                        <td>{{ exam_attempt.user.email }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Telefon:</td>
+                        <td>{{ exam_attempt.user.phone_number or 'Belirtilmemiş' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Kodlama Bilgisi:</td>
+                        <td>
+                            {% if exam_attempt.exam_level == 'none' %}
+                                🌱 Hiç Bilgim Yok
+                            {% elif exam_attempt.exam_level == 'beginner' %}
+                                🟢 Başlangıç
+                            {% elif exam_attempt.exam_level == 'intermediate' %}
+                                🟡 Orta
+                            {% elif exam_attempt.exam_level == 'advanced' %}
+                                🔴 İleri
+                            {% else %}
+                                Bilinmiyor
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-12 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="bi bi-clipboard-check"></i> Sınav Bilgileri</h5>
+                <table class="table table-borderless">
+                    <tr>
+                        <td class="text-muted" width="40%">Başlangıç:</td>
+                        <td>{{ exam_attempt.start_time.strftime('%d.%m.%Y %H:%M:%S') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Bitiş:</td>
+                        <td>{{ exam_attempt.end_time.strftime('%d.%m.%Y %H:%M:%S') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Süre:</td>
+                        <td><strong>{{ ((exam_attempt.end_time - exam_attempt.start_time).seconds // 60) }} dakika</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Puan:</td>
+                        <td>
+                            <h3 class="mb-0 text-{{ 'success' if exam_attempt.score >= 70 else 'warning' if exam_attempt.score >= 50 else 'danger' }}">
+                                {{ "%.1f"|format(exam_attempt.score) }}%
+                            </h3>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Sekme Değişimi:</td>
+                        <td>
+                            {% if exam_attempt.tab_switches > 0 %}
+                                <span class="badge bg-warning">{{ exam_attempt.tab_switches }} uyarı</span>
+                            {% else %}
+                                <span class="badge bg-success">✓ Temiz</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sorular ve Cevaplar -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-4">
+                    <i class="bi bi-list-check"></i> Sorular ve Cevaplar
+                    <span class="badge bg-secondary">{{ exam_attempt.answers|length }} soru</span>
+                </h5>
+                
+                {% for answer in exam_attempt.answers %}
+                <div class="card mb-3 {{ 'border-success' if answer.is_correct else 'border-danger' }}">
+                    <div class="card-header {{ 'bg-success-subtle' if answer.is_correct else 'bg-danger-subtle' }}">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                <strong>Soru {{ loop.index }}</strong>
+                            </div>
+                            <div class="col-auto">
+                                <span class="badge bg-{{ 'secondary' if answer.question.difficulty == 'beginner' else 'primary' if answer.question.difficulty == 'intermediate' else 'danger' }}">
+                                    {{ answer.question.difficulty.title() }}
+                                </span>
+                            </div>
+                            <div class="col-auto">
+                                <span class="badge bg-{{ 'info' if answer.question.requires_coding else 'secondary' }}">
+                                    {{ 'Kodlama' if answer.question.requires_coding else 'Mantık/Görsel' }}
+                                </span>
+                            </div>
+                            <div class="col-auto ms-auto">
+                                {% if answer.is_correct %}
+                                    <i class="bi bi-check-circle-fill text-success"></i> Doğru
+                                {% else %}
+                                    <i class="bi bi-x-circle-fill text-danger"></i> Yanlış
+                                {% endif %}
+                            </div>
+                            <div class="col-auto">
+                                <strong>{{ answer.question.points }} puan</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3"><strong>{{ answer.question.question_text }}</strong></p>
+                        
+                        {% if answer.question.question_type == 'multiple_choice' %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Şıklar:</strong></p>
+                                <ul class="list-unstyled">
+                                    <li class="{{ 'text-success fw-bold' if answer.question.correct_answer == 'a' else '' }}">
+                                        A) {{ answer.question.option_a }}
+                                        {% if answer.question.correct_answer == 'a' %}<i class="bi bi-check-circle-fill text-success"></i>{% endif %}
+                                    </li>
+                                    <li class="{{ 'text-success fw-bold' if answer.question.correct_answer == 'b' else '' }}">
+                                        B) {{ answer.question.option_b }}
+                                        {% if answer.question.correct_answer == 'b' %}<i class="bi bi-check-circle-fill text-success"></i>{% endif %}
+                                    </li>
+                                    <li class="{{ 'text-success fw-bold' if answer.question.correct_answer == 'c' else '' }}">
+                                        C) {{ answer.question.option_c }}
+                                        {% if answer.question.correct_answer == 'c' %}<i class="bi bi-check-circle-fill text-success"></i>{% endif %}
+                                    </li>
+                                    <li class="{{ 'text-success fw-bold' if answer.question.correct_answer == 'd' else '' }}">
+                                        D) {{ answer.question.option_d }}
+                                        {% if answer.question.correct_answer == 'd' %}<i class="bi bi-check-circle-fill text-success"></i>{% endif %}
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Kullanıcının Cevabı:</strong></p>
+                                <p class="mb-0">
+                                    {% if answer.user_answer %}
+                                        <span class="badge bg-{{ 'success' if answer.is_correct else 'danger' }} p-2">
+                                            {{ answer.user_answer.upper() }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary p-2">Cevap Verilmedi</span>
+                                    {% endif %}
+                                </p>
+                                <p class="mt-2 mb-0"><strong>Doğru Cevap:</strong></p>
+                                <p><span class="badge bg-success p-2">{{ answer.question.correct_answer.upper() }}</span></p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                
+                {% if not exam_attempt.answers %}
+                <div class="alert alert-warning text-center">
+                    <i class="bi bi-exclamation-triangle"></i> Bu sınavda soru bulunmuyor.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Geri Dön Butonu -->
+<div class="row mt-4">
+    <div class="col-12">
+        <a href="{{ url_for('admin.exam_results') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Geri Dön
+        </a>
+    </div>
+</div>
+{% endblock %}

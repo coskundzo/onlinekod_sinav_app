@@ -94,8 +94,11 @@
                         <button type="submit" class="btn btn-primary me-2">
                             <i class="bi bi-search"></i> Filtrele
                         </button>
-                        <a href="{{ url_for('admin.exam_results') }}" class="btn btn-secondary">
+                        <a href="{{ url_for('admin.exam_results') }}" class="btn btn-secondary me-2">
                             <i class="bi bi-x-circle"></i> Temizle
+                        </a>
+                        <a href="{{ url_for('admin.export_exam_results') }}" class="btn btn-success">
+                            <i class="bi bi-file-earmark-excel"></i> Excel'e Aktar
                         </a>
                     </div>
                 </form>
@@ -121,6 +124,7 @@
                             <tr>
                                 <th class="text-center" style="width: 50px;">#</th>
                                 <th>Kullanıcı</th>
+                                <th class="d-none d-lg-table-cell">Telefon</th>
                                 <th class="text-center">Sınav Seviyesi</th>
                                 <th class="text-center">Puan</th>
                                 <th class="text-center">Sonuç Seviyesi</th>
@@ -137,6 +141,9 @@
                                 <td>
                                     <strong>{{ exam.user.username }}</strong>
                                     <br><small class="text-muted">{{ exam.user.email }}</small>
+                                </td>
+                                <td class="d-none d-lg-table-cell">
+                                    {{ exam.user.phone_number or '-' }}
                                 </td>
                                 <td class="text-center">
                                     {% if exam.exam_level == 'none' %}

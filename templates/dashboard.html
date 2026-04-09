@@ -140,11 +140,9 @@
                     Çoktan seçmeli sorular ve kod yazma görevleri seni bekliyor. 💻
                     {% endif %}
                 </p>
-                <form method="POST" action="{{ url_for('exam.start_exam') }}">
-                    <button type="submit" class="btn start-exam-btn">
-                        <i class="bi bi-play-circle-fill"></i> SINAVA BAŞLA
-                    </button>
-                </form>
+                <a href="{{ url_for('exam.pre_survey') }}" class="btn start-exam-btn">
+                    <i class="bi bi-play-circle-fill"></i> SINAVA BAŞLA
+                </a>
                 <p class="text-muted mt-4 mb-0">
                     <i class="bi bi-info-circle"></i> Sınav başladığında sekme değiştirmemeye özen göster!
                 </p>

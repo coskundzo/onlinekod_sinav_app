@@ -1,5 +1,4 @@
 import os
-import openai
 from models import Question
 from extensions import db
 from config import Config
@@ -17,7 +16,8 @@ def generate_questions_with_ai(topic="Python programlama", difficulty="intermedi
         return generate_predefined_questions(topic, difficulty, count)
     
     try:
-        openai.api_key = api_key
+        from openai import OpenAI
+        client = OpenAI(api_key=api_key)
         
         prompt = f"""
         {count} adet {difficulty} seviyesinde {topic} konusunda çoktan seçmeli soru oluştur.
@@ -33,7 +33,7 @@ def generate_questions_with_ai(topic="Python programlama", difficulty="intermedi
         ---
         """
         
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "Sen bir eğitim uzmanısın ve kaliteli sınav soruları hazırlıyorsun."},

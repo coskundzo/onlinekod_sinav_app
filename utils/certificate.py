@@ -36,10 +36,14 @@ def generate_certificate(user, exam_attempt):
     
     # Determine which font to use (with Turkish support)
     try:
+        pdfmetrics.getFont('ArialUnicode')
         main_font = 'ArialUnicode'
-        bold_font = 'ArialUnicode-Bold'
     except:
         main_font = 'Helvetica'
+    try:
+        pdfmetrics.getFont('ArialUnicode-Bold')
+        bold_font = 'ArialUnicode-Bold'
+    except:
         bold_font = 'Helvetica-Bold'
     
     # Custom styles with Turkish font support
@@ -113,7 +117,7 @@ def generate_certificate(user, exam_attempt):
     elements.append(Spacer(1, 0.2*inch))
     
     # Certificate title
-    elements.append(Paragraph("🏆 BAŞARI SERTİFİKASI 🏆", title_style))
+    elements.append(Paragraph("BASARI SERTIFIKASI", title_style))
     elements.append(Spacer(1, 0.3*inch))
     
     elements.append(Paragraph("Bu sertifika ile onaylanır ki,", subtitle_style))
@@ -138,10 +142,10 @@ def generate_certificate(user, exam_attempt):
     
     # Results table
     level_name = {
-        'advanced': 'İleri Seviye 🔴',
-        'intermediate': 'Orta Seviye 🟡',
-        'beginner': 'Başlangıç Seviyesi 🟢',
-        'none': 'Kategori Dışı ⚪'
+        'advanced': 'Ileri Seviye',
+        'intermediate': 'Orta Seviye',
+        'beginner': 'Baslangic Seviyesi',
+        'none': 'Kategori Disi'
     }
     
     data = [

@@ -52,12 +52,14 @@ def add_question():
     question_type = request.form.get('question_type')
     difficulty = request.form.get('difficulty')
     points = int(request.form.get('points', 10))
+    requires_coding = request.form.get('requires_coding', 'false') == 'true'
     
     question = Question(
         question_text=question_text,
         question_type=question_type,
         difficulty=difficulty,
-        points=points
+        points=points,
+        requires_coding=requires_coding
     )
     
     if question_type == 'multiple_choice':
@@ -350,3 +352,13 @@ def delete_user(user_id):
         flash(f'{username} kullanıcısı silindi!', 'success')
     
     return redirect(url_for('admin.users'))
+
+@admin_bp.route('/questions/delete/<int:question_id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_question(question_id):
+    question = Question.query.get_or_404(question_id)
+    db.session.delete(question)
+    db.session.commit()
+    flash('Soru başarıyla silindi!', 'success')
+    return redirect(url_for('admin.questions'))

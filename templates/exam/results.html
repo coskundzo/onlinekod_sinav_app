@@ -106,17 +106,32 @@
                     <table class="table">
                         <thead>
                             <tr>
+                                <th>#</th>
                                 <th>Soru</th>
                                 <th>Tür</th>
                                 <th>Zorluk</th>
                                 <th>Cevabın</th>
+                                <th>Doğru Cevap</th>
                                 <th>Sonuç</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for answer in exam_attempt.answers %}
-                            <tr>
+                            <tr class="{{ 'table-danger' if not answer.is_correct else 'table-success' }}">
                                 <td>{{ loop.index }}</td>
+                                <td style="max-width:300px;">
+                                    <small>{{ answer.question.question_text }}</small>
+                                    {% if answer.question.question_type == 'multiple_choice' %}
+                                    <div class="mt-1">
+                                        <small class="text-muted">
+                                            A) {{ answer.question.option_a }}<br>
+                                            B) {{ answer.question.option_b }}<br>
+                                            C) {{ answer.question.option_c }}<br>
+                                            D) {{ answer.question.option_d }}
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                </td>
                                 <td>
                                     {% if answer.question.question_type == 'multiple_choice' %}
                                         Çoktan Seçmeli
@@ -131,19 +146,23 @@
                                 </td>
                                 <td>
                                     {% if answer.question.question_type == 'multiple_choice' %}
-                                        {{ answer.user_answer|upper if answer.user_answer else '-' }}
+                                        <strong>{{ answer.user_answer|upper if answer.user_answer else '-' }}</strong>
                                     {% else %}
                                         Kod
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if answer.is_correct %}
-                                        <span class="badge bg-success">✓ Doğru</span>
+                                    {% if answer.question.question_type == 'multiple_choice' %}
+                                        <strong class="text-success">{{ answer.question.correct_answer|upper }}</strong>
                                     {% else %}
-                                        <span class="badge bg-danger">✗ Yanlış</span>
-                                        {% if answer.question.question_type == 'multiple_choice' %}
-                                            <small class="text-muted">(Doğru: {{ answer.question.correct_answer|upper }})</small>
-                                        {% endif %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if answer.is_correct %}
+                                        <span class="badge bg-success">&#10003; Doğru</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">&#10007; Yanlış</span>
                                     {% endif %}
                                 </td>
                             </tr>

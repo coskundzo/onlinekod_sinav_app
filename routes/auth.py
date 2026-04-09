@@ -1,10 +1,9 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, session
+from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, current_user
 from authlib.integrations.flask_client import OAuth
 from models import User
 from extensions import db
 from forms import LoginForm, RegisterForm
-import secrets
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -95,8 +94,13 @@ def google_callback():
     try:
         token = oauth.google.authorize_access_token()
         user_info = token.get('userinfo')
-        
+
+        # Fallback for cases where provider response doesn't include userinfo inline.
         if not user_info:
+            user_info_response = oauth.google.get('https://openidconnect.googleapis.com/v1/userinfo')
+            user_info = user_info_response.json() if user_info_response else None
+        
+        if not user_info or not user_info.get('sub') or not user_info.get('email'):
             flash('Google girişi başarısız oldu.', 'danger')
             return redirect(url_for('auth.login'))
         

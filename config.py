@@ -6,8 +6,10 @@ load_dotenv()
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-this'
     
-    # Normalize Render PostgreSQL URL and force a pure-Python driver for compatibility.
-    database_url = os.environ.get('DATABASE_URL') or 'postgresql://postgres:postgres@localhost:5432/onlinekod_sinav'
+    # DATABASE_URL is required; avoid silent fallback to localhost in cloud environments.
+    database_url = os.environ.get('DATABASE_URL')
+    if not database_url:
+        raise RuntimeError('DATABASE_URL is not set. Configure your PostgreSQL connection string in environment variables.')
     if database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
     if database_url.startswith('postgresql://') and '+pg8000' not in database_url:

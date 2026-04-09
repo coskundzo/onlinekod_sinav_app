@@ -6,10 +6,12 @@ load_dotenv()
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-this'
     
-    # Fix for Render PostgreSQL (postgres:// -> postgresql://)
+    # Normalize Render PostgreSQL URL and force a pure-Python driver for compatibility.
     database_url = os.environ.get('DATABASE_URL') or 'postgresql://postgres:postgres@localhost:5432/onlinekod_sinav'
     if database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    if database_url.startswith('postgresql://') and '+pg8000' not in database_url:
+        database_url = database_url.replace('postgresql://', 'postgresql+pg8000://', 1)
     SQLALCHEMY_DATABASE_URI = database_url
 
     SQLALCHEMY_ENGINE_OPTIONS = {

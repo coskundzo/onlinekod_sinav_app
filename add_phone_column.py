@@ -12,11 +12,11 @@ def add_phone_column():
         try:
             # Add phone_number column to user table
             with db.engine.connect() as conn:
-                conn.execute(text('ALTER TABLE user ADD COLUMN phone_number VARCHAR(20)'))
+                conn.execute(text('ALTER TABLE "user" ADD COLUMN phone_number VARCHAR(20)'))
                 conn.commit()
             print("✓ phone_number sütunu başarıyla eklendi!")
         except Exception as e:
-            if "duplicate column name" in str(e).lower() or "already exists" in str(e).lower():
+            if "already exists" in str(e).lower():
                 print("⚠️  phone_number sütunu zaten mevcut")
             else:
                 print(f"❌ Hata: {e}")
